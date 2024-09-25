@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { KEY } from "./config";
+import { useState, useRef, useEffect } from "react";
+import { KEY } from "../config";
 import Loader from "./Loader";
 import StarRating from "./StarRating";
+import { useKey } from "../useKey";
 
 export default function MovieDetails({
   selectedId,
@@ -13,6 +14,15 @@ export default function MovieDetails({
   const [isLoading, setIsLoading] = useState(false);
   const [userRating, setUserRating] = useState("");
   const isWatched = watched.map((movie) => movie.imdbID).includes(selectedId);
+
+  const countRef = useRef(0);
+
+  useEffect(
+    function () {
+      if (userRating) countRef.current++;
+    },
+    [userRating]
+  );
 
   const watchedUserrating = watched.find(
     (movie) => movie.imdbID === selectedId
@@ -31,17 +41,6 @@ export default function MovieDetails({
     Genre: genre,
   } = movie;
 
-  // const [isTop, setIsTop] = useState(imdbRating > 8);
-  // useEffect(
-  //   function () {
-  //     setIsTop(imdbRating > 8);
-  //   },
-  //   [imdbRating]
-  // );
-
-  // const isTop = imdbRating > 8;
-  // console.log(isTop);
-
   function handleAdd() {
     const newWatchedMovie = {
       imdbID: selectedId,
@@ -51,27 +50,14 @@ export default function MovieDetails({
       imdbRating: Number(imdbRating),
       runtime: Number(runtime.split(" ").at(0)),
       userRating,
+      countRatingDecisions: countRef.current,
     };
 
     onAddWatched(newWatchedMovie);
     onCloseMovie();
   }
 
-  useEffect(
-    function () {
-      function callback(e) {
-        if (e.code === "Escape") {
-          onCloseMovie();
-        }
-      }
-      document.addEventListener("keydown", callback);
-
-      return function () {
-        document.removeEventListener("keydown", callback);
-      };
-    },
-    [onCloseMovie]
-  );
+  useKey("Escape", onCloseMovie);
 
   useEffect(
     function () {
